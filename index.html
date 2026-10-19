@@ -4,15 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#202124">
-  <title>猫耳剧集探索｜价格筛选器</title>
+  <title>毛孩子公园相亲处</title>
+  <link rel="icon" type="image/jpeg" href="assets/cat-avatar.jpg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="site-header">
-    <div class="brand-mark" aria-hidden="true">耳</div>
+    <img class="brand-mark" src="assets/cat-avatar.jpg" alt="可爱小猫头像">
     <div>
-      <h1>猫耳剧集探索</h1>
-      <p>按价格、主创与个人偏好，发现想听的广播剧</p>
+      <h1>毛孩子公园相亲处</h1>
+      <p>在毛孩子公园，找到预算内的心动广播剧</p>
     </div>
     <div class="header-side">MAOER · DRAMA FINDER</div>
   </header>
@@ -22,7 +23,7 @@
       <div>
         <p class="eyebrow">DRAMA DISCOVERY</p>
         <h2>找到预算内的下一部剧</h2>
-        <p class="intro-copy">默认按播放量从高到低排序；偏好匹配会优先展示，但不会因此隐藏其他符合价格条件的剧。</p>
+        <p class="intro-copy">设置你的预算和心动偏好，再开始寻找合适的广播剧。查询前不会展示剧集列表。</p>
       </div>
       <div class="summary-pill"><span class="status-dot"></span><span id="dataStatus">正在读取剧集数据…</span></div>
     </section>
@@ -112,42 +113,10 @@
       </div>
 
       <div class="actions-row">
-        <p id="filterHint">价格留空时不限价格。选择作者、CV、类型或标签后，会优先展示匹配结果。</p>
-        <button id="applyButton" class="button button-primary" type="button"><span aria-hidden="true">⌕</span> 筛选剧集</button>
+        <p id="filterHint">至少填写一项筛选条件，再点击「开始寻找」。作者、CV、类型和标签用于偏好排序，不会单独排除其他剧。</p>
+        <button id="applyButton" class="button button-primary" type="button"><span aria-hidden="true">🐾</span> 开始寻找 →</button>
       </div>
       <p id="errorMessage" class="error-message" role="alert" hidden></p>
-    </section>
-
-    <section class="panel pair-panel" aria-labelledby="pairTitle">
-      <div class="panel-heading">
-        <div><span class="section-number">02</span><h2 id="pairTitle">双剧组合</h2></div>
-        <span class="pair-mode-note">按原价计算 · 两部不同的剧</span>
-      </div>
-      <p class="pair-intro">输入两部剧的合计价格范围，网页会列出所有符合条件的组合。组合不受上方单剧筛选条件影响；每一对剧只展示一次。</p>
-      <div class="filter-grid price-grid pair-price-grid">
-        <label class="field">
-          <span>组合总价最低（元）</span>
-          <input id="pairMinPrice" type="number" min="0" step="0.01" placeholder="不限">
-        </label>
-        <label class="field">
-          <span>组合总价最高（元）</span>
-          <input id="pairMaxPrice" type="number" min="0" step="0.01" placeholder="不限">
-        </label>
-        <div class="pair-action-wrap">
-          <button id="pairApplyButton" class="button button-primary" type="button">查找双剧组合</button>
-        </div>
-      </div>
-      <p id="pairErrorMessage" class="error-message" role="alert" hidden></p>
-      <div class="results-heading pair-results-heading">
-        <div><h3>组合结果 <span id="pairResultCount" class="count">0</span></h3></div>
-        <div class="view-note">按合计原价从低到高排列</div>
-      </div>
-      <div id="pairResults" class="pair-results" aria-live="polite"></div>
-      <div id="pairEmptyState" class="empty-state">
-        <div class="empty-icon">＋</div>
-        <h3>暂未找到符合条件的组合</h3>
-        <p>请设置总价范围后查找，或放宽价格区间。</p>
-      </div>
     </section>
 
     <section class="results-section">
@@ -160,16 +129,16 @@
       </div>
       <div id="results" class="results-list" aria-live="polite"></div>
       <div id="emptyState" class="empty-state" hidden>
-        <div class="empty-icon">⌕</div>
-        <h3>没有找到符合条件的剧集</h3>
-        <p>试试放宽价格范围，或清除部分筛选条件。</p>
+        <div class="empty-icon" aria-hidden="true">🐈</div>
+        <h3>还没有查询结果哦～</h3>
+        <p>请先设置筛选条件，然后点击「开始寻找」查看符合条件的剧集吧！</p>
       </div>
       <p class="data-note">数据来自本仓库的 <code>data/dramas.csv</code>。更新 CSV 并提交到 GitHub 后，网页会读取最新版本。</p>
     </section>
   </main>
 
   <footer class="site-footer">
-    <span>猫耳剧集探索</span><span>静态网页 · GitHub Pages</span>
+    <span><img class="footer-cat" src="assets/cat-avatar.jpg" alt=""> 毛孩子公园相亲处</span><span>静态网页 · GitHub Pages</span>
   </footer>
   <script src="app.js"></script>
 </body>

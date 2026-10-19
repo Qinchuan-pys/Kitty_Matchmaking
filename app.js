@@ -5,10 +5,7 @@
 const CSV_PATH = "data/dramas.csv";
 let dramas = [];
 let filtered = [];
-let pairSorted = [];
-let pairTotalCount = 0;
-let pairCurrentPage = 1;
-const PAIR_PAGE_SIZE = 50;
+let hasSearched = false;
 
 const $ = (id) => document.getElementById(id);
 const FIELD_ALIASES = {
@@ -163,8 +160,25 @@ function getPreferenceMatches(d) {
   if (tag && (d.tags || "").toLowerCase().includes(tag)) matched.push("标签");
   return matched;
 }
+function hasAnyCondition() {
+  return $("minPrice").value.trim() !== "" || $("maxPrice").value.trim() !== "" ||
+    $("keyword").value.trim() !== "" || $("tagKeyword").value.trim() !== "" ||
+    getSelectedValues($("authors")).length > 0 || getSelectedValues($("cvs")).length > 0 ||
+    getSelectedValues($("types")).length > 0 || $("memberFilter").value !== "" ||
+    $("discountFilter").value !== "";
+}
 function runFilter() {
   $("errorMessage").hidden = true;
+  if (!hasAnyCondition()) {
+    hasSearched = false;
+    filtered = [];
+    $("emptyState").hidden = false;
+    $("emptyState").querySelector("h3").textContent = "还没有查询结果哦～";
+    $("emptyState").querySelector("p").textContent = "请至少填写一项筛选条件，然后点击「开始寻找」。";
+    renderResults();
+    return;
+  }
+  hasSearched = true;
   const minRaw = $("minPrice").value.trim(), maxRaw = $("maxPrice").value.trim();
   const min = minRaw === "" ? null : numberValue(minRaw);
   const max = maxRaw === "" ? null : numberValue(maxRaw);
@@ -214,141 +228,6 @@ function runFilter() {
   });
   renderResults();
 }
-function lowerBoundPrice(items, target) {
-  let lo = 0, hi = items.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (items[mid].price < target) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
-function upperBoundPrice(items, target) {
-  let lo = 0, hi = items.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (items[mid].price <= target) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
-function countPairsAtMost(items, bound, inclusive) {
-  if (bound === Infinity) return items.length * (items.length - 1) / 2;
-  if (bound === -Infinity) return 0;
-  let count = 0, j = items.length - 1;
-  for (let i = 0; i < items.length; i++) {
-    while (j > i && (inclusive ? items[i].price + items[j].price > bound : items[i].price + items[j].price >= bound)) j--;
-    if (j <= i) break;
-    count += j - i;
-  }
-  return count;
-}
-function makePairHeap(items, min, max) {
-  const heap = [];
-  const less = (a, b) => a.total < b.total || (a.total === b.total && (a.i < b.i || (a.i === b.i && a.j < b.j)));
-  function push(node) {
-    let i = heap.length; heap.push(node);
-    while (i > 0) { const p = (i - 1) >> 1; if (!less(heap[i], heap[p])) break; [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; }
-  }
-  function pop() {
-    if (!heap.length) return null;
-    const top = heap[0], last = heap.pop();
-    if (heap.length) {
-      heap[0] = last; let i = 0;
-      while (true) {
-        let smallest = i, left = i * 2 + 1, right = left + 1;
-        if (left < heap.length && less(heap[left], heap[smallest])) smallest = left;
-        if (right < heap.length && less(heap[right], heap[smallest])) smallest = right;
-        if (smallest === i) break;
-        [heap[i], heap[smallest]] = [heap[smallest], heap[i]]; i = smallest;
-      }
-    }
-    return top;
-  }
-  for (let i = 0; i < items.length - 1; i++) {
-    let j = Math.max(i + 1, min === -Infinity ? i + 1 : lowerBoundPrice(items, min - items[i].price));
-    const end = max === Infinity ? items.length : upperBoundPrice(items, max - items[i].price);
-    if (j < end) push({ i, j, end, total: Math.round((items[i].price + items[j].price) * 100) / 100 });
-  }
-  return { pop, push };
-}
-function renderPairPage() {
-  const results = $("pairResults");
-  const pages = Math.max(1, Math.ceil(pairTotalCount / PAIR_PAGE_SIZE));
-  pairCurrentPage = Math.min(Math.max(1, pairCurrentPage), pages);
-  const startIndex = (pairCurrentPage - 1) * PAIR_PAGE_SIZE;
-  const endIndex = Math.min(startIndex + PAIR_PAGE_SIZE, pairTotalCount);
-  const heap = makePairHeap(pairSorted, pairMinBound, pairMaxBound);
-  const pagePairs = [];
-  // 通过最小堆按总价顺序取出当前页所需的组合，不把所有组合一次性塞进 DOM。
-  for (let k = 0; k < endIndex; k++) {
-    const node = heap.pop();
-    if (!node) break;
-    if (k >= startIndex) pagePairs.push({ a: pairSorted[node.i], b: pairSorted[node.j], total: node.total });
-    const nextJ = node.j + 1;
-    if (nextJ < node.end) heap.push({ i: node.i, j: nextJ, end: node.end, total: Math.round((pairSorted[node.i].price + pairSorted[nextJ].price) * 100) / 100 });
-  }
-  results.innerHTML = pagePairs.map((pair, offset) => `
-    <article class="pair-card">
-      <div class="pair-rank">${String(startIndex + offset + 1).padStart(2, "0")}</div>
-      <div class="pair-drama">
-        <div class="pair-drama-title">${esc(pair.a.title)}</div>
-        <div class="pair-drama-meta">${esc(pair.a.author || "作者未知")} · ${esc(pair.a.type || "类型未填写")}</div>
-        <div class="pair-price">${fmtPrice(pair.a.price)}</div>
-      </div>
-      <div class="pair-operator" aria-label="加">＋</div>
-      <div class="pair-drama">
-        <div class="pair-drama-title">${esc(pair.b.title)}</div>
-        <div class="pair-drama-meta">${esc(pair.b.author || "作者未知")} · ${esc(pair.b.type || "类型未填写")}</div>
-        <div class="pair-price">${fmtPrice(pair.b.price)}</div>
-      </div>
-      <div class="pair-total"><span>合计原价</span><strong>${fmtPrice(pair.total)}</strong></div>
-    </article>`).join("");
-  const pager = $("pairPagination");
-  if (pager) {
-    pager.hidden = pairTotalCount === 0;
-    pager.innerHTML = pairTotalCount ? `<span>第 ${fmtNumber(pairCurrentPage)} / ${fmtNumber(pages)} 页，每页 ${PAIR_PAGE_SIZE} 组</span><div class="pair-pagination-actions"><button type="button" class="button button-secondary" id="pairPrevPage" ${pairCurrentPage <= 1 ? "disabled" : ""}>上一页</button><button type="button" class="button button-secondary" id="pairNextPage" ${pairCurrentPage >= pages ? "disabled" : ""}>下一页</button></div>` : "";
-    const prev = $("pairPrevPage"), next = $("pairNextPage");
-    if (prev) prev.addEventListener("click", () => { pairCurrentPage--; renderPairPage(); });
-    if (next) next.addEventListener("click", () => { pairCurrentPage++; renderPairPage(); });
-  }
-  $("pairEmptyState").hidden = pairTotalCount > 0;
-}
-let pairMinBound = -Infinity, pairMaxBound = Infinity;
-function runPairFilter() {
-  const error = $("pairErrorMessage");
-  error.hidden = true;
-  const minRaw = $("pairMinPrice").value.trim();
-  const maxRaw = $("pairMaxPrice").value.trim();
-  const min = minRaw === "" ? null : numberValue(minRaw);
-  const max = maxRaw === "" ? null : numberValue(maxRaw);
-  if ((minRaw !== "" && min === null) || (maxRaw !== "" && max === null)) {
-    error.textContent = "组合总价请输入有效数字。"; error.hidden = false; return;
-  }
-  if (min !== null && max !== null && min > max) {
-    error.textContent = "组合总价最低值不能高于最高值。"; error.hidden = false; return;
-  }
-  if (min === null && max === null) {
-    pairSorted = []; pairTotalCount = 0;
-    $("pairResultCount").textContent = "0";
-    $("pairResults").innerHTML = "";
-    $("pairPagination").hidden = true;
-    $("pairEmptyState").hidden = false;
-    return;
-  }
-  pairMinBound = min === null ? -Infinity : min;
-  pairMaxBound = max === null ? Infinity : max;
-  pairSorted = dramas.filter(d => d.price !== null && d.price >= 0)
-    .sort((a, b) => a.price - b.price || a.title.localeCompare(b.title, "zh-CN"));
-  const allCount = pairSorted.length * (pairSorted.length - 1) / 2;
-  const belowMin = min === null ? 0 : countPairsAtMost(pairSorted, min, false);
-  const atMostMax = max === null ? allCount : countPairsAtMost(pairSorted, max, true);
-  pairTotalCount = Math.max(0, atMostMax - belowMin);
-  pairCurrentPage = 1;
-  $("pairResultCount").textContent = fmtNumber(pairTotalCount);
-  renderPairPage();
-}
-
 function showError(message) { $("errorMessage").textContent = message; $("errorMessage").hidden = false; }
 function detail(label, value) {
   return `<div class="detail"><div class="detail-label">${esc(label)}</div><div class="detail-value">${esc(value || "—")}</div></div>`;
@@ -390,9 +269,19 @@ function renderCard(d, index) {
   </article>`;
 }
 function renderResults() {
-  $("resultCount").textContent = fmtNumber(filtered.length);
-  $("results").innerHTML = filtered.map(renderCard).join("");
-  $("emptyState").hidden = filtered.length !== 0;
+  $("resultCount").textContent = hasSearched ? fmtNumber(filtered.length) : "—";
+  $("results").innerHTML = hasSearched ? filtered.map(renderCard).join("") : "";
+  if (!hasSearched) {
+    $("emptyState").hidden = false;
+    $("emptyState").querySelector("h3").textContent = "还没有查询结果哦～";
+    $("emptyState").querySelector("p").textContent = "请先设置筛选条件，然后点击「开始寻找」查看符合条件的剧集吧！";
+  } else {
+    $("emptyState").hidden = filtered.length !== 0;
+    if (filtered.length === 0) {
+      $("emptyState").querySelector("h3").textContent = "没有找到符合条件的剧集";
+      $("emptyState").querySelector("p").textContent = "试试放宽价格范围，或清除部分筛选条件。";
+    }
+  }
 }
 function resetFilters() {
   ["minPrice", "maxPrice", "keyword", "tagKeyword"].forEach(id => $(id).value = "");
@@ -401,7 +290,8 @@ function resetFilters() {
   $("discountFilter").value = "";
   $("preferenceMode").value = "on";
   $("sortBy").value = "plays-desc";
-  runFilter();
+  hasSearched = false;
+  renderResults();
 }
 async function loadData() {
   try {
@@ -417,9 +307,9 @@ async function loadData() {
     if (indexes.price < 0) throw new Error("CSV 中找不到「价格」列，请检查表头。");
     dramas = rows.slice(1).map(row => normalizeDrama(row, headers, indexes)).filter(d => d.title && d.title !== "(未填写剧名)");
     populateFilters();
-    $("dataStatus").textContent = `已读取 ${fmtNumber(dramas.length)} 部剧`;
-    runFilter();
-    runPairFilter();
+    $("dataStatus").textContent = `已准备 ${fmtNumber(dramas.length)} 部剧`;
+    hasSearched = false;
+    renderResults();
   } catch (error) {
     $("dataStatus").textContent = "数据读取失败";
     showError(`${error.message}。请确认 CSV 已提交到仓库的 data/dramas.csv，并通过 GitHub Pages 地址访问网页。`);
@@ -430,22 +320,6 @@ async function loadData() {
 }
 
 $("applyButton").addEventListener("click", runFilter);
-$("pairApplyButton").addEventListener("click", runPairFilter);
-["pairMinPrice", "pairMaxPrice"].forEach(id => {
-  $(id).addEventListener("input", () => {
-    window.clearTimeout(window.__pairFilterTimer);
-    window.__pairFilterTimer = window.setTimeout(runPairFilter, 160);
-  });
-  $(id).addEventListener("change", runPairFilter);
-});
 $("resetButton").addEventListener("click", resetFilters);
-["minPrice", "maxPrice", "keyword", "tagKeyword", "memberFilter", "discountFilter", "preferenceMode", "sortBy", "authors", "cvs", "types"].forEach(id => {
-  $(id).addEventListener("change", runFilter);
-});
-["minPrice", "maxPrice", "keyword", "tagKeyword"].forEach(id => {
-  $(id).addEventListener("input", () => {
-    window.clearTimeout(window.__filterTimer);
-    window.__filterTimer = window.setTimeout(runFilter, 160);
-  });
-});
+// 筛选条件只在点击「开始寻找」后应用，不因输入或下拉选择而自动展示剧集。
 loadData();
