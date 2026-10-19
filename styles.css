@@ -53,6 +53,10 @@ select[multiple] option { padding: 4px 7px; border-radius: 4px; }
 .pair-results-heading { margin: 22px 0 14px; }
 .pair-results-heading h3 { margin: 0; font-size: 16px; }
 .pair-results { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.pair-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; color: var(--muted); font-size: 12px; }
+.pair-pagination-actions { display: flex; gap: 8px; }
+.pair-pagination .button { min-height: 34px; padding: 7px 12px; }
+.pair-pagination .button:disabled { opacity: .45; cursor: not-allowed; }
 .pair-card { display: grid; grid-template-columns: 35px minmax(0, 1fr) 28px minmax(0, 1fr) minmax(105px, .45fr); align-items: center; gap: 13px; background: #fffefa; border: 1px solid var(--line); border-radius: 13px; padding: 15px; min-width: 0; }
 .pair-rank { width: 32px; height: 32px; display: grid; place-items: center; background: #f1eee7; border-radius: 9px; color: #8b7a5d; font-size: 11px; font-weight: 750; }
 .pair-drama { min-width: 0; }
