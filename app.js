@@ -261,9 +261,6 @@ function renderCard(d, index) {
       <div><div class="metric-label">会员折扣率</div><div class="metric-value">${d.discountRate === null ? "—" : `${fmtNumber(d.discountRate)}${String(d.raw.discountRate || "").includes("%") ? "%" : ""}`}</div></div>
     </div>
     <div class="card-details">
-      ${detail("剧集 ID", d.id)}
-      ${detail("付费方式 / need_pay", [d.payMethod, d.needPay ? `need_pay=${d.needPay}` : ""].filter(Boolean).join(" · "))}
-      ${detail("年龄分级", d.age)}
       ${detail("标签", d.tags)}
     </div>
   </article>`;
