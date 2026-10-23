@@ -46,12 +46,12 @@
       <!-- 价格与剧名 -->
       <div class="filter-grid price-grid">
         <label class="field">
-          <span>最低价格（元）</span>
+          <span>最低价格（钻石）</span>
           <input id="minPrice" type="number" min="0" step="0.01" placeholder="不限">
         </label>
 
         <label class="field">
-          <span>最高价格（元）</span>
+          <span>最高价格（钻石）</span>
           <input id="maxPrice" type="number" min="0" step="0.01" placeholder="不限">
         </label>
 
@@ -135,9 +135,8 @@
             <option value="discount-desc">会员折后价格：高 → 低</option>
             <option value="episodes-desc">总集数：多 → 少</option>
             <option value="episodes-asc">总集数：少 → 多</option>
-            <option value="age-desc">年龄分级：高 → 低</option>
-            <option value="id-asc">按时间：早 → 晚（id 小 → 大）</option>
-            <option value="id-desc">按时间：晚 → 早（id 大 → 小）</option>
+            <option value="id-asc">按时间：早 → 晚</option>
+            <option value="id-desc">按时间：晚 → 早</option>
           </select>
         </label>
 
@@ -153,9 +152,8 @@
             <option value="discount-desc">会员折后价格：高 → 低</option>
             <option value="episodes-desc">总集数：多 → 少</option>
             <option value="episodes-asc">总集数：少 → 多</option>
-            <option value="age-desc">年龄分级：高 → 低</option>
-            <option value="id-asc">按时间：早 → 晚（id 小 → 大）</option>
-            <option value="id-desc">按时间：晚 → 早（id 大 → 小）</option>
+            <option value="id-asc">按时间：早 → 晚</option>
+            <option value="id-desc">按时间：晚 → 早</option>
           </select>
         </label>
       </div>
@@ -190,10 +188,7 @@
         <p>请先设置筛选条件，然后点击「开始寻找」查看符合条件的剧集吧！</p>
       </div>
 
-      <p class="data-note">
-        数据来自本仓库的 <code>data/dramas.csv</code>。更新 CSV 并提交到 GitHub 后，网页会读取最新版本。
-      </p>
-    </section>
+    
   </main>
 
   <footer class="site-footer">
